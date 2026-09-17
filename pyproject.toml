@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "speech2seis"
+version = "0.1.0"
+description = "Speech2Seis: cross-modal transfer of a pretrained speech model (Wav2Vec2) to seismic monitoring"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Speech2Seis contributors" }]
+keywords = ["seismology", "phase picking", "back-azimuth", "epicentral distance", "wav2vec2", "transfer learning"]
+dependencies = [
+    "torch>=2.0",
+    "transformers>=4.30",
+    "peft>=0.6",
+    "einops>=0.6",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+seisbench = ["seisbench>=0.10", "obspy>=1.4"]
+
+[tool.setuptools]
+packages = ["s2s"]
