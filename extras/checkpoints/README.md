@@ -1,8 +1,10 @@
 # Checkpoints
 
 Download links for the pretrained backbone and the released task weights go
-here. Local `*.pth` files are git-ignored (they are large), so weights are
-distributed through the links below rather than committed to the repository.
+here. `quick_start.py` automatically looks for `<task>.pth` (e.g. `S2S_dpk.pth`)
+in this folder and loads it when present. Local `*.pth` files are git-ignored
+(they are large), so weights are distributed through the links below rather than
+committed to the repository.
 
 ## Backbone (Wav2Vec2)
 
@@ -12,13 +14,18 @@ distributed through the links below rather than committed to the repository.
 
 ## Task weights
 
-| Model | URL |
-|-------|-----|
-| `S2S_dpk` | <!-- TODO: fill in download URL --> |
-| `S2S_pmp` | <!-- TODO: fill in download URL --> |
-| `S2S_baz` | <!-- TODO: fill in download URL --> |
-| `S2S_dis` | <!-- TODO: fill in download URL --> |
-| `S2S_bazdis` | <!-- TODO: fill in download URL --> |
+All released task weights (`S2S_dpk`, `S2S_pmp`, `S2S_baz`, `S2S_dis`,
+`S2S_bazdis`) are available at:
+
+**https://drive.google.com/drive/folders/1ZdSloEIN6NLm9lvs7r9RAs26K3_p4bot?usp=sharing**
+
+| Model | Download |
+|-------|----------|
+| `S2S_dpk` | [Google Drive](https://drive.google.com/drive/folders/1ZdSloEIN6NLm9lvs7r9RAs26K3_p4bot?usp=sharing) |
+| `S2S_pmp` | [Google Drive](https://drive.google.com/drive/folders/1ZdSloEIN6NLm9lvs7r9RAs26K3_p4bot?usp=sharing) |
+| `S2S_baz` | [Google Drive](https://drive.google.com/drive/folders/1ZdSloEIN6NLm9lvs7r9RAs26K3_p4bot?usp=sharing) |
+| `S2S_dis` | [Google Drive](https://drive.google.com/drive/folders/1ZdSloEIN6NLm9lvs7r9RAs26K3_p4bot?usp=sharing) |
+| `S2S_bazdis` | [Google Drive](https://drive.google.com/drive/folders/1ZdSloEIN6NLm9lvs7r9RAs26K3_p4bot?usp=sharing) |
 
 ## Loading
 

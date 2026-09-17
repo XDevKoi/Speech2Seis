@@ -16,12 +16,18 @@ of shape ``(B, 96, 1500)`` which is patchified into ``187 x 768`` tokens.
 
 from __future__ import annotations
 
+import os
+
+# Silence HuggingFace download progress bars (must be set before the import below).
+os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
+
 import torch
 import torch.nn as nn
 import torch._dynamo.config
 from einops import rearrange
 
 import transformers.models.wav2vec2 as Wav2Vec2
+from transformers.utils import logging as hf_logging
 from peft import get_peft_model
 
 from .common import (
@@ -120,11 +126,19 @@ class LLM_Block(nn.Module):
         self.patch_size = patch_size
 
         if pretrain:
-            full_model = Wav2Vec2.Wav2Vec2Model.from_pretrained(
-                resolve_wav2vec2_path(pretrained_path),
-                output_hidden_states=True,
-                ignore_mismatched_sizes=True,
-            )
+            # The Wav2Vec2 checkpoint also contains the pretraining heads
+            # (lm_head / masked_spec_embed), which are irrelevant here. Quiet the
+            # harmless "UNEXPECTED / MISSING" load report for this call only.
+            previous_verbosity = hf_logging.get_verbosity()
+            hf_logging.set_verbosity_error()
+            try:
+                full_model = Wav2Vec2.Wav2Vec2Model.from_pretrained(
+                    resolve_wav2vec2_path(pretrained_path),
+                    output_hidden_states=True,
+                    ignore_mismatched_sizes=True,
+                )
+            finally:
+                hf_logging.set_verbosity(previous_verbosity)
             self.llm = full_model.encoder
         else:
             self.llm = Wav2Vec2.Wav2Vec2Model(Wav2Vec2.Wav2Vec2Config()).encoder

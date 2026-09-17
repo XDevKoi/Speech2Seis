@@ -59,7 +59,8 @@ TASK_SPECS = {
         "input": "(B, 3, 6000) float32, channels [Z, N, E], demeaned and std-normalised per trace",
         "output": "(B, 3, 6000) sigmoid probabilities, channels [N, P, S]",
         "loss": "weighted BCE on [N, P, S] with weights [[0], [1], [1]]",
-        "decode": "pick peaks of the P / S curves above a threshold (e.g. 0.3)",
+        "decode": "local maxima of the P / S curves above 0.3 (min. 50-sample separation) "
+                  "-> arrival sample indices; see s2s.postprocess.decode_dpk",
         "centered": False,
     },
     "S2S_pmp": {

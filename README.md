@@ -11,7 +11,7 @@ English | [中文文档](extras/README.zh-CN.md)
 > A paper is in preparation and will be submitted.
 
 **Speech2Seis** explores **cross-modal transfer** for seismic monitoring: a
-pretrained speech model (**Wav2Vec2 2.0**) is adapted to 3-component seismic
+pretrained speech model (**Wav2Vec 2.0**) is adapted to 3-component seismic
 waveforms through a lightweight multi-scale convolutional embedder and
 parameter-efficient fine-tuning (LoRA). A single shared backbone handles five
 downstream tasks:
@@ -79,7 +79,7 @@ Speech2Seis/
 ├── extras/                  # non-source files
 │   ├── samples/             # STEAD test-set sample
 │   ├── seisbench/           # S2S_dpk SeisBench extension
-│   └── checkpoints/         # released weights (placeholder)
+│   └── checkpoints/         # released weights (download links)
 ├── requirements.txt
 ├── pyproject.toml
 └── LICENSE
@@ -110,6 +110,12 @@ The path is resolved in this order:
 export S2S_WAV2VEC2_PATH=/path/to/wav2vec2
 ```
 
+### Hardware requirements
+
+> **Speech2Seis is a hundred-million-parameter model (~90M parameters). GPU-accelerated
+> inference is strongly recommended.** A GPU with **≥ 8 GB** of memory is sufficient
+> for a batch size of 32.
+
 ---
 
 ## Model zoo and I/O contract
@@ -121,7 +127,7 @@ the waveform length (6000). The P-centered models require the P arrival to sit a
 
 | Model | Input | Output | Loss | Decoding |
 |-------|-------|--------|------|----------|
-| `S2S_dpk` | `(B, 3, 6000)` | `(B, 3, L)` sigmoid, `[N, P, S]` | weighted BCE `[0, 1, 1]` | peak-pick P/S curves above 0.3 |
+| `S2S_dpk` | `(B, 3, 6000)` | `(B, 3, L)` sigmoid, `[N, P, S]` | weighted BCE `[0, 1, 1]` | local maxima of the P/S curves above 0.3 (min. 50-sample separation) → arrival sample indices (`s2s.postprocess.decode_dpk`) |
 | `S2S_pmp` | `(B, 3, 6000)`, P-centered | `(B, 2)` softmax, `[up, down]` | cross entropy `[1, 1]` | `argmax` (0 = up, 1 = down) |
 | `S2S_baz` | `(B, 3, 6000)`, P-centered | `(cos, sin)`, each `(B, 1)` | Huber on `(cos, sin)` | `atan2(sin, cos)·180/π mod 360` |
 | `S2S_dis` | `(B, 3, 6000)`, P-centered | `(B, 1)` km | Huber | direct (sigmoid × 500) |
@@ -161,9 +167,23 @@ python quick_start.py
 ```
 
 The sample is drawn from the **STEAD test set** (see `extras/samples/`).
-`quick_start.py` builds the models with randomly initialised weights by default
-and prints a warning that no pretrained weights are loaded; it only checks the
-definitions and I/O shapes. To run a **single sample with real weights**:
+By default `quick_start.py` looks for trained weights in `extras/checkpoints/`:
+
+* if `extras/checkpoints/<task>.pth` exists (e.g. `S2S_dpk.pth`), it is loaded —
+  the pretrained Wav2Vec2 backbone is resolved through `S2S_WAV2VEC2_PATH` / the
+  `pretrained_path` argument, otherwise downloaded from HuggingFace;
+* if no checkpoint is found for a task, that task is built with **randomly
+  initialised** weights and a warning is printed (shape / definition check only).
+
+Pre-trained task weights can be downloaded from
+[**Google Drive**](https://drive.google.com/drive/folders/1ZdSloEIN6NLm9lvs7r9RAs26K3_p4bot?usp=sharing);
+place them in `extras/checkpoints/` as `<task>.pth`.
+
+So after placing weights in `extras/checkpoints/`, just run `python quick_start.py`
+to test the trained models on a real test-set sample. `S2S_dpk` predictions are
+decoded into P/S arrival sample indices with `s2s.postprocess.decode_dpk` (local
+maxima above 0.3 with ≥ 50 samples separation) and printed. The equivalent
+explicit code is:
 
 ```python
 import torch

@@ -26,6 +26,7 @@ from .models import (
     build_model,
     load_checkpoint,
 )
+from .postprocess import decode_dpk, peaks_above_threshold
 from .preprocess import cut_window_p_centered, fit_length, normalize, prepare_p_centered
 
 __version__ = "0.1.0"
@@ -54,6 +55,8 @@ __all__ = [
     "cut_window_p_centered",
     "prepare_p_centered",
     "fit_length",
+    "decode_dpk",
+    "peaks_above_threshold",
     "lora_setting",
     "resolve_wav2vec2_path",
     "WAV2VEC2_DOWNLOAD_URL",

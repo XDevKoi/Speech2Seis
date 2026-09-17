@@ -72,7 +72,7 @@ Speech2Seis/
 ├── extras/                  # 源码之外的文件
 │   ├── samples/             # STEAD 测试集样本
 │   ├── seisbench/           # S2S_dpk 的 SeisBench 扩展
-│   └── checkpoints/         # 待发布权重（占位）
+│   └── checkpoints/         # 已发布权重（下载链接）
 ├── requirements.txt
 ├── pyproject.toml
 └── LICENSE
@@ -103,6 +103,11 @@ pip install -e .
 export S2S_WAV2VEC2_PATH=/path/to/wav2vec2
 ```
 
+### 硬件要求
+
+> **Speech2Seis 属于亿级大模型（约 90M 参数），强烈建议使用 GPU 加速推理。**
+> 显存 **≥ 8 GB** 即可支持单次批大小为 32。
+
 ---
 
 ## 模型与输入/输出约定
@@ -114,7 +119,7 @@ export S2S_WAV2VEC2_PATH=/path/to/wav2vec2
 
 | 模型 | 输入 | 输出 | 损失 | 解码 |
 |------|------|------|------|------|
-| `S2S_dpk` | `(B, 3, 6000)` | `(B, 3, L)` sigmoid，`[N, P, S]` | 加权 BCE `[0, 1, 1]` | 对 P/S 曲线做峰值拾取（阈值 0.3） |
+| `S2S_dpk` | `(B, 3, 6000)` | `(B, 3, L)` sigmoid，`[N, P, S]` | 加权 BCE `[0, 1, 1]` | 取 P/S 曲线中 >0.3 的局部极大值（相邻间隔 ≥50 样点），输出到时样点索引（`s2s.postprocess.decode_dpk`） |
 | `S2S_pmp` | `(B, 3, 6000)`，P 居中 | `(B, 2)` softmax，`[up, down]` | 交叉熵 `[1, 1]` | `argmax`（0 = up，1 = down） |
 | `S2S_baz` | `(B, 3, 6000)`，P 居中 | `(cos, sin)`，各 `(B, 1)` | 对 `(cos, sin)` 的 Huber | `atan2(sin, cos)·180/π mod 360` |
 | `S2S_dis` | `(B, 3, 6000)`，P 居中 | `(B, 1)` km | Huber | 直接输出（sigmoid × 500） |
@@ -154,8 +159,22 @@ python quick_start.py
 ```
 
 测试样本来自 **STEAD 测试集**（见 `extras/samples/`，为随机抽取的一条）。
-`quick_start.py` 默认使用随机初始化的权重，并在运行时提示未加载预训练权重，
-仅用于检查模型定义与输入/输出形状。若要用**真实权重跑单样本**：
+`quick_start.py` 默认会在 `extras/checkpoints/` 中查找训练好的权重：
+
+* 若存在 `extras/checkpoints/<task>.pth`（如 `S2S_dpk.pth`），则加载该权重 ——
+  预训练 Wav2Vec2 骨干通过 `S2S_WAV2VEC2_PATH` / `pretrained_path` 解析，
+  否则从 HuggingFace 下载；
+* 若某任务没有对应权重，则使用**随机初始化**权重，并打印提示（仅用于检查
+  形状与模型定义）。
+
+预训练任务权重可从
+[**Google Drive**](https://drive.google.com/drive/folders/1ZdSloEIN6NLm9lvs7r9RAs26K3_p4bot?usp=sharing)
+下载，放入 `extras/checkpoints/` 并命名为 `<task>.pth`。
+
+因此，只要把权重放进 `extras/checkpoints/`，直接运行 `python quick_start.py`
+即可用真实权重在测试集样本上测试。其中 `S2S_dpk` 会用
+`s2s.postprocess.decode_dpk` 解码为 P/S 到时样点索引（>0.3 的局部极大值，
+相邻间隔 ≥50 样点）并打印。等价的显式代码如下：
 
 ```python
 import torch
